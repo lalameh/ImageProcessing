@@ -20,8 +20,16 @@ const unzipper = require("unzipper"),
  * @return {promise}
  */
 const unzip = (pathIn, pathOut) => {
-  fs.createReadStream('path/to/archive.zip')
-  .pipe(unzipper.Extract({ path: 'output/path' }));
+
+  return new Promise((resolve, reject) => {
+    fs.createReadStream(pathIn)
+     .pipe(unzipper.Extract({ path: pathOut }))
+     .on('close', () => {
+        console.log("Extraction operation complete");
+        resolve();
+      })
+     .on('error', (error) => reject(error))
+   })
 };
 
 /**
@@ -31,7 +39,20 @@ const unzip = (pathIn, pathOut) => {
  * @param {string} path
  * @return {promise}
  */
-const readDir = (dir) => {};
+const readDir = (dir) => {
+  return new Promise((resolve, reject) => {
+    fs.readdir(dir, function(err, files) {
+      if(err) {
+        reject(err);
+      } else {
+        let pngFiles = files.filter(el => path.extname(el) === '.png')
+        resolve(pngFiles);
+      }
+    });
+  })
+ 
+  
+};
 
 /**
  * Description: Read in png file by given pathIn,
@@ -52,14 +73,17 @@ const grayScale = (pathIn, pathOut) => {
     for (var y = 0; y < this.height; y++) {
       for (var x = 0; x < this.width; x++) {
         var idx = (this.width * y + x) << 2;
- 
+        let grayScale = (this.data[idx] + this.data[idx + 1] + this.data[idx + 2]) / 3;
         // invert color
-        this.data[idx] = 255 - this.data[idx];
-        this.data[idx + 1] = 255 - this.data[idx + 1];
-        this.data[idx + 2] = 255 - this.data[idx + 2];
+        // this.data[idx] = 255 - this.data[idx];
+        // this.data[idx + 1] = 255 - this.data[idx + 1];
+        // this.data[idx + 2] = 255 - this.data[idx + 2];
+        this.data[idx] = grayScale;
+        this.data[idx + 1] = grayScale;
+        this.data[idx + 2] = grayScale;
  
         // and reduce opacity
-        this.data[idx + 3] = this.data[idx + 3] >> 1;
+        // this.data[idx + 3] = this.data[idx + 3] >> 1;
       }
     }
  
